@@ -6,12 +6,8 @@ var s3 = new aws.S3();
 var fileUpload = require('express-fileupload');
 router.use(fileUpload());
 
-/* GET /. */
+
 router.get('/', function(req, res) {
-  /*
-   * @TODO Add code to display all buckets;
-   */
-  
   s3.listBuckets({},function(err,data) {
       if(err) {
           throw err;
@@ -22,84 +18,50 @@ router.get('/', function(req, res) {
 });
 
 router.get('/:bucket/', function(req, res) {
-    var params = {
-      Bucket: req.params.bucket  
-    };
-    s3.listObjects(params, function (err, data) {
-        if (err) {
-            console.log(err);
-        } else {
-           console.log(req.params.bucket);
-           console.log(data);
-           res.render('listObjects', {bucket: req.params.bucket,objects:data.Contents});
-        }
-    });
+
+    /*
+     * @TODO - Programa la logica para obtener los objetos de un bucket.
+     *         Se debe tambien generar una nueblo templade en jade para presentar
+     *         esta información. Similar al que lista los Buckets.
+     */
+    
 });
 
 router.get('/:bucket/:key', function(req, res) {
-    var params = {
-      Bucket: req.params.bucket,
-      Key: req.params.key
-    };    
-    s3.getObject(params, function(err, data){
-        if(err) {
-            console.log(err, err.stack);
-        } else {
-            console.log(data);
-            res.type(data.ContentType);
-            res.send(data.Body);
-        }
-            
-    });
+    
+    /*
+     * @TODO - Programa la logica para obtener un objeto en especifico
+     * es importante a la salida enviar el tipo de respuesta y el contenido
+     * 
+     * Ejemplo de esto:
+     *     res.type(...) --> String de content-type
+     *     res.send(...) --> Buffer con los datos.
+     */    
 });
 
+
 router.post('/', function(req,res) {
-    var params = {
-        Bucket: req.body.Bucket,
-        CreateBucketConfiguration: {
-            LocationConstraint: req.body.Region
-        }
-    };
-    
-    s3.createBucket(params, function(err,data) {
-        if(err) {
-            if(err = 'BucketAlreadyOwnedByYou') {
-                res.send("Bucket ya existe");
-            } else {
-                console.log(err, err.stack);
-            }
-        } else {
-            console.log(err);
-            res.send("Bucket Creado");
-        }
-    });
+    /*
+     * @TODO - Programa la logica para crear un Bucket.
+    */
 });
 
 router.post('/:bucket', function(req,res) {
-    
-    if(!req.files) {
-        res.send("No files in post");
-    }
-    
-    console.log(req.files);
-    
-    var base64data = new Buffer(req.files.file.data, 'binary');
-    
-    var params = {
-        Bucket: req.params.bucket,
-        Key: req.files.file.name,
-        Body: base64data
-    };
-    
-    s3.putObject(params,function(err,data){
-        if(err) {
-            console.log(err, err.stack);
-            res.send(err);
-        }  else {
-            res.send(data.ETag);
-        }
-    });
-    
+
+    /*
+     * @TODO - Programa la logica para crear un nuevo objeto.
+     * TIPS:
+     *  req.files contiene todo los archivos enviados mediante post.
+     *  cada elemento de files contiene multiple información algunos campos
+     *  importanets son:
+     *      data -> Buffer con los datos del archivo.
+     *      name -> Nombre del archivo original
+     *      mimetype -> tipo de archivo.
+     *  el conjunto files dentro del req es generado por el modulo 
+     *  express-fileupload
+     *  
+    */
+     
 });
 
 module.exports = router;
