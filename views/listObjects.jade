@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to S3 Client
+  p List of Objects in Bucket
+  
+  table
+    tr
+        td Name
+        td View
+    each ob in objects
+        tr
+            td= ob.Key
+            td #[a(href='/#{bucket}/#{ob.Key}/') View]
+
+  
+  form(action="/#{bucket}", method="post", encType="multipart/form-data")
+    label(for="file") Archivo:
+    input#name.form-control(name='file', type='file')
+    button(type="submit") Enviar

@@ -10,22 +10,25 @@ router.use(fileUpload());
 router.get('/', function(req, res) {
   s3.listBuckets({},function(err,data) {
       if(err) {
+          console.log(err);
           throw err;
       }
-      console.log(data);
       res.render('listBuckets', { buckets: data.Buckets});
+      console.log('end');
   });
 });
 
-router.get('/:bucket/', function(req, res) {
+router.get('/:bucket', function(req, res) {
+    s3.listObjects({Bucket: req.params.bucket},function(err,data){
+        if(err) {
+            throw err;
+        }
+        console.log(data.Contents);
 
-    /*
-     * @TODO - Programa la logica para obtener los objetos de un bucket.
-     *         Se debe tambien generar una nueblo templade en jade para presentar
-     *         esta información. Similar al que lista los Buckets.
-     */
-    
+        res.render('listObjects', { bucket:req.params.bucket, objects: data.Contents});
+    });
 });
+
 
 router.get('/:bucket/:key', function(req, res) {
     
@@ -37,6 +40,17 @@ router.get('/:bucket/:key', function(req, res) {
      *     res.type(...) --> String de content-type
      *     res.send(...) --> Buffer con los datos.
      */    
+    var param = {Bucket: req.params.bucket,Key:req.params.key};
+
+    s3.getObject(param, function(err,data){
+        if(err)
+            throw err;
+        console.log( data);
+        console.log( data.Body);
+        res.type(data.ContentType);
+        
+        res.send(data.Body);
+    });
 });
 
 
@@ -44,6 +58,29 @@ router.post('/', function(req,res) {
     /*
      * @TODO - Programa la logica para crear un Bucket.
     */
+    console.log(req.body);
+
+    var params = {
+        Bucket: req.body.name,
+        CreateBucketConfiguration:{
+            LocationConstraint: 'us-west-2'
+        }
+    };
+    
+    s3.createBucket(params, function(err,data){
+        if(err){
+            if(err.code == 'BucketAlreadyOwnedByYou' 
+                || err.code =='BucketAlreadyExists'){
+                console.log("El bucket ya existe");
+
+            }else{
+                console.log(err,err.stack);
+            }
+        }else{
+            console.log('bucket creado');
+            res.render('bucketCreado', {});
+        }
+    });
 });
 
 router.post('/:bucket', function(req,res) {
@@ -61,7 +98,30 @@ router.post('/:bucket', function(req,res) {
      *  express-fileupload
      *  
     */
-     
+
+    var bucketName = req.params.bucket;
+
+    console.log(req.files.file.mimetype);
+
+
+    var params = {
+        Bucket: bucketName,
+        Key: req.files.file.name,
+        Body: req.files.file.data,
+        ContentType: req.files.file.mimetype
+    };
+
+    s3.putObject(params, function(err,data){
+        if(err){
+            console.log(err,err.stack);
+            throw err;
+        }
+        else{
+            console.log('Archivo agregado... ETag:' + data.ETag);
+            res.render('archivoCreado', {bucket: bucketName});
+        }
+    });
 });
+   
 
 module.exports = router;

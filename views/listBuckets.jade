@@ -12,5 +12,8 @@ block content
     each bucket in buckets
         tr
             td= bucket.Name
-            td #[a(href='/#{bucket.Name}/') View]
-
+            td #[a(href='/#{bucket.Name}') View]
+  form(action="/", method="post")
+    label(for="name") Name:
+    input#name.form-control(type='text',placeholder='Nombre del bucket' ,name="name")
+    button(type="submit") Enviar
